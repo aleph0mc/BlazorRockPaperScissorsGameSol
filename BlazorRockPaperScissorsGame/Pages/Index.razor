@@ -1,0 +1,99 @@
+﻿@page "/"
+@using System.Timers
+@using BlazorRockPaperScissorsGame.Helpers
+
+@implements IDisposable
+
+<h1>Rock, Paper and Scissors</h1>
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <h3 style="color: @messageColor; font-weight: bold;">@message</h3>
+}
+
+<button class="btn btn-info" @onclick="PlayAgain">Play Again</button>
+
+<div style="display: flex; justify-content: center; margin-bottom: 20px">
+    <img src="images/@opponetHand.ImageName" class="image" />
+</div>
+
+<div style="display: flex; justify-content: space-around">
+    @foreach (var hand in hands)
+    {
+        <img src="images/@hand.ImageName" class="image selectable-image" @onclick="@(() => SelectHand(hand))" />
+    }
+</div>
+
+@code {
+
+    List<Hand> hands = new List<Hand>
+{
+        new Hand {Selection = OptionRPS.Paper, LosesAgainst = OptionRPS.Scissors, WinsAgainst = OptionRPS.Rock, ImageName = "paper.jpg"},
+        new Hand {Selection = OptionRPS.Rock, LosesAgainst = OptionRPS.Paper, WinsAgainst = OptionRPS.Scissors, ImageName = "rock.jpg"},
+        new Hand {Selection = OptionRPS.Scissors, LosesAgainst = OptionRPS.Rock, WinsAgainst = OptionRPS.Paper, ImageName = "scissors.jpg"},
+    };
+
+
+    Timer timer;
+    Hand opponetHand;
+    string message = string.Empty;
+    string messageColor = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        opponetHand = hands[0];
+
+        timer = new Timer();
+        timer.Interval = 500;
+        timer.Elapsed += TimerOnElapsed;
+        timer.Start();
+    }
+
+    int idxOpponentHand = 0;
+    private void TimerOnElapsed(object sender, ElapsedEventArgs e)
+    {
+        idxOpponentHand = (++idxOpponentHand) % hands.Count;
+        opponetHand = hands[idxOpponentHand];
+        StateHasChanged(); //event to inform the component something changed
+
+        Console.WriteLine(idxOpponentHand);
+    }
+
+    private void SelectHand(Hand hand)
+    {
+        timer.Stop();
+        var result = hand.PlayAgainst(opponetHand);
+
+        switch (result)
+        {
+            case GameStatus.Victory:
+                message = "You won!!!";
+                messageColor = "green";
+                break;
+            case GameStatus.Loss:
+                message = "You lost!!!";
+                messageColor = "red";
+                break;
+            default:
+                message = "Draw!!!";
+                messageColor = "navy";
+                break;
+        }
+    }
+
+    private void PlayAgain()
+    {
+        timer.Start();
+        message = string.Empty;
+        idxOpponentHand = 0;
+    }
+
+    public void Dispose()
+    {
+        if (null != timer)
+        {
+            timer.Dispose();
+            timer = null;
+        }
+    }
+}

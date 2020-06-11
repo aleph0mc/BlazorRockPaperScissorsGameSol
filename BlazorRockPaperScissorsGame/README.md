@@ -1,0 +1,2 @@
+# BlazorPaperRockScissorsGame
+blazor game
